@@ -1,25 +1,17 @@
-import logo from './logo.svg';
-import './App.css';
+import {useAuthListener} from 'api/auth'
+import React from 'react'
+
+const AuthenticatedApp = React.lazy(() => import('pages/authenticated-app'))
+const UnauthenticatedApp = React.lazy(() => import('pages/unauthenticated-app'))
 
 function App() {
+  const {user} = useAuthListener()
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <React.Suspense fallback="loading">
+      {user ? <AuthenticatedApp /> : <UnauthenticatedApp />}
+    </React.Suspense>
+  )
 }
 
-export default App;
+export default App
