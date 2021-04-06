@@ -1,16 +1,16 @@
-import * as React from 'react'
+import React from 'react'
 
-// import {useAuthListener} from 'hooks/use-auth-listener'
+import {useAuthListener} from 'hooks/use-auth-listener'
 
 const AuthContext = React.createContext()
 AuthContext.displayName = 'AuthContext'
 
 function AuthProvider(props) {
-  // const {user} = useAuthListener()
+  const {user} = useAuthListener()
 
-  // const value = React.useMemo(() => user, [user])
+  const value = React.useMemo(() => user, [user])
 
-  return <AuthContext.Provider value={[]} {...props} />
+  return <AuthContext.Provider value={value} {...props} />
 }
 
 /**
@@ -18,12 +18,14 @@ function AuthProvider(props) {
  *
  * @returns {object} A user object
  */
-function useAuth() {
+function useAuthContext() {
   const context = React.useContext(AuthContext)
+
   if (context === undefined) {
     throw new Error(`useAuth must be used within a AuthProvider`)
   }
+
   return context
 }
 
-export {AuthProvider, useAuth}
+export {AuthProvider, useAuthContext}

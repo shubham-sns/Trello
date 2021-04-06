@@ -1,45 +1,26 @@
-import Container from '@material-ui/core/Container'
 import {Redirect, Route, Switch} from 'react-router-dom'
 
-import makeStyles from '@material-ui/core/styles/makeStyles'
-
-import {Login} from './login'
-import {Signup} from './signup'
+import {Signin} from './signin'
+import {SignUp} from './signup'
 
 function UnauthenticatedPages() {
   return (
     <Switch>
-      <Route path="/login">
-        <Login />
+      <Route path="/signin">
+        <Signin />
       </Route>
 
       <Route path="/signup">
-        <Signup />
+        <SignUp />
       </Route>
 
-      <Redirect to="/login" />
+      <Redirect to="/signin" />
     </Switch>
   )
 }
 
-const useStyles = makeStyles(theme => ({
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    height: '100vh',
-    minWidth: '100vw',
-  },
-}))
-
 function UnauthenticatedApp() {
-  const classes = useStyles()
-
-  return (
-    <Container className={classes.container} component="main" maxWidth="xs">
-      <UnauthenticatedPages />
-    </Container>
-  )
+  return <UnauthenticatedPages />
 }
 
 export default UnauthenticatedApp

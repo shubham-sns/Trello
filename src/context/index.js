@@ -2,7 +2,6 @@ import {BrowserRouter as Router} from 'react-router-dom'
 import {QueryClient, QueryClientProvider} from 'react-query'
 import {ReactQueryDevtools} from 'react-query/devtools'
 
-import CssBaseline from '@material-ui/core/CssBaseline'
 
 import {AuthProvider} from './auth-context'
 
@@ -24,7 +23,6 @@ function AppProviders({children}) {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <CssBaseline />
         <AuthProvider>{children}</AuthProvider>
       </Router>
       <ReactQueryDevtools position="bottom-left" />

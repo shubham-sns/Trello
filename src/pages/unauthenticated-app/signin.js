@@ -11,31 +11,25 @@ import {
   Message,
   Segment,
 } from 'semantic-ui-react'
-import {createUserWithEmailAndPassword} from 'services/firebase/auth'
-import {createUser} from 'services/firebase/db'
+import {signInWithEmailAndPassword} from 'services/firebase/auth'
 
-function SignUp() {
+function Signin() {
   const {
     control,
     setValue,
     handleSubmit,
     formState: {errors},
   } = useForm({
-    defaultValues: {username: '', email: '', password: ''},
+    defaultValues: {email: '', password: ''},
   })
 
-  const createStoreUserMutation = useMutation(({uid, email, username}) =>
-    createUser(uid, username, email),
-  )
-
-  const createAuthUserMutation = useMutation(({email, password, username}) =>
-    createUserWithEmailAndPassword(email, password).then(authUser =>
-      createStoreUserMutation.mutate({
-        uid: authUser.user.uid,
-        email,
-        username,
-      }),
-    ),
+  const {mutate, isLoading, error} = useMutation(
+    ({email, password}) => signInWithEmailAndPassword(email, password),
+    {
+      onError() {
+        setValue('password', '')
+      },
+    },
   )
 
   return (
@@ -46,34 +40,11 @@ function SignUp() {
           style={{marginLeft: 'auto', marginRight: 'auto'}}
         />
         <Header as="h2" color="teal" textAlign="center">
-          Create New Account
+          Log-in to your account
         </Header>
 
-        <Form
-          size="large"
-          onSubmit={handleSubmit(data => createAuthUserMutation.mutate(data))}
-        >
+        <Form size="large" onSubmit={handleSubmit(mutate)}>
           <Segment stacked>
-            <Controller
-              name="username"
-              control={control}
-              rules={{
-                required: {
-                  message: 'Username is required',
-                  value: true,
-                },
-              }}
-              render={({field: {ref, ...field}}) => (
-                <Form.Input
-                  {...field}
-                  fluid
-                  icon="user"
-                  iconPosition="left"
-                  placeholder="Username"
-                  error={errors?.username && {content: errors.username.message}}
-                />
-              )}
-            />
             <Controller
               name="email"
               control={control}
@@ -98,6 +69,7 @@ function SignUp() {
                 />
               )}
             />
+
             <Controller
               name="password"
               control={control}
@@ -128,29 +100,20 @@ function SignUp() {
               color="teal"
               fluid
               size="large"
-              loading={
-                createStoreUserMutation.isLoading ||
-                createAuthUserMutation.isLoading
-              }
-              disabled={
-                createStoreUserMutation.isLoading ||
-                createAuthUserMutation.isLoading
-              }
+              disabled={isLoading}
+              loading={isLoading}
             >
-              Sign Up
+              Login
             </Button>
           </Segment>
         </Form>
-        {createAuthUserMutation?.error?.message && (
-          <Message error>{createAuthUserMutation.error.message}</Message>
-        )}
-
+        {error?.message && <Message error>{error.message}</Message>}
         <Message>
-          Already have an account? <Link to="/signin">Sign in</Link>
+          New to us? <Link to="/signup"> Sign Up</Link>
         </Message>
       </Grid.Column>
     </Grid>
   )
 }
 
-export {SignUp}
+export {Signin}
