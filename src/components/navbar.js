@@ -1,66 +1,52 @@
-import React, {useState} from 'react'
-
+import {useDisclosure} from 'hooks/use-disclosure'
 import {Link} from 'react-router-dom'
-import IconButton from '@material-ui/core/IconButton'
-import HomeIcon from '@material-ui/icons/Home'
-import SettingsIcon from '@material-ui/icons/Settings'
-import Menu from '@material-ui/core/Menu'
-import MenuItem from '@material-ui/core/MenuItem'
-import ExitToAppIcon from '@material-ui/icons/ExitToApp'
-import {ListItemIcon, Typography} from '@material-ui/core'
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    '& > *': {
-      margin: theme.spacing(1),
-    },
-  },
-}))
+import {
+  Menu,
+  Container,
+  Button,
+  Modal,
+  ModalHeader,
+  ModalActions,
+  ModalContent,
+} from 'semantic-ui-react'
+import {signOut} from 'services/firebase/auth'
 
 function Navbar() {
-  const classes = useStyles()
-
-  const [anchorEl, setAnchorEl] = React.useState(null)
-
-  const handleClick = event => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
-
+  const {isOpen, onClose, onOpen} = useDisclosure()
   return (
-    <nav>
-      <IconButton aria-label="delete">
-        <HomeIcon />
-      </IconButton>
-      <IconButton
-        arial-label="setting"
-        aria-controls="simple-menu"
-        aria-haspopup="true"
-        onClick={handleClick}
-      >
-        <SettingsIcon />
-      </IconButton>
+    <Menu
+      style={{backgroundColor: '#0079BF'}}
+      fixed="top"
+      pointing
+      secondary
+      size="large"
+    >
+      <Container>
+        <Menu.Item>
+          <Button as={Link} icon to="/">
+            {/* <Icon name="home" size="large" color="black" /> */}
+            Home
+          </Button>
+        </Menu.Item>
 
-      <Menu
-        id="simple-menu"
-        anchorEl={anchorEl}
-        keepMounted
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-      >
-        <MenuItem>
-          <ListItemIcon>
-            <ExitToAppIcon fontSize="small" />
-          </ListItemIcon>
-          <Typography variant="inherit">Logout</Typography>
-        </MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
-        <MenuItem onClick={handleClose}>Logout</MenuItem>
-      </Menu>
-    </nav>
+        <Menu.Item>
+          <Button onClick={onOpen}>Logout</Button>
+        </Menu.Item>
+      </Container>
+
+      <Modal open={isOpen} onClose={onClose} size="tiny">
+        <ModalHeader>Logout</ModalHeader>
+        <ModalContent>Do you want to logout?</ModalContent>
+        <ModalActions>
+          <Button basic onClick={onClose}>
+            Cancel
+          </Button>
+          <Button color="red" onClick={signOut}>
+            Logout
+          </Button>
+        </ModalActions>
+      </Modal>
+    </Menu>
   )
 }
 

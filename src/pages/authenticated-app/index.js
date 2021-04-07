@@ -1,22 +1,31 @@
 import React from 'react'
-import {Redirect, Route, Switch, useRouteMatch} from 'react-router-dom'
-import {Button} from 'semantic-ui-react'
-import {signOut} from 'services/firebase/auth'
+import {Redirect, Route, Switch} from 'react-router-dom'
+
+import {Navbar} from 'components/navbar'
+import {BoardsPage} from './boards'
+import {Container} from 'semantic-ui-react'
 
 function AuthenticatedRoutes() {
   return (
     <Switch>
-      <Route path="/dashboard">
-        <Button onClick={signOut}>Logout</Button>
+      <Route path="/boards">
+        <BoardsPage />
       </Route>
 
-      <Redirect to="/dashboard" />
+      <Redirect to="/boards" />
     </Switch>
   )
 }
 
 function AuthenticatedApp() {
-  return <AuthenticatedRoutes />
+  return (
+    <>
+      <Navbar />
+      <Container as="main" className="main__container">
+        <AuthenticatedRoutes />
+      </Container>
+    </>
+  )
 }
 
 export default AuthenticatedApp

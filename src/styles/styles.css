@@ -1,0 +1,20 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.main__container {
+  padding-top: 8rem;
+}
+
+.create_board-colors {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.board__card {
+  height: 8rem;
+  width: auto;
+  cursor: pointer;
+}

@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import 'fomantic-ui-css/semantic.min.css';
+import 'fomantic-ui-css/semantic.min.css'
 
-import App from './app'
 import {AppProviders} from './context'
+import App from './app'
+import 'styles/styles.css'
 
 ReactDOM.render(
   <React.StrictMode>
