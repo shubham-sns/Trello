@@ -11,22 +11,20 @@ import {
   Message,
   Segment,
 } from 'semantic-ui-react'
+
 import {createUserWithEmailAndPassword} from 'services/firebase/auth'
-import {createUser} from 'services/firebase/db'
+import {useCreateStoreUser} from 'services/firebase/db'
 
 function SignUp() {
   const {
     control,
-    setValue,
     handleSubmit,
     formState: {errors},
   } = useForm({
     defaultValues: {username: '', email: '', password: ''},
   })
 
-  const createStoreUserMutation = useMutation(({uid, email, username}) =>
-    createUser(uid, username, email),
-  )
+  const createStoreUserMutation = useCreateStoreUser()
 
   const createAuthUserMutation = useMutation(({email, password, username}) =>
     createUserWithEmailAndPassword(email, password).then(authUser =>

@@ -4,8 +4,11 @@
   box-sizing: border-box;
 }
 
-.main__container {
-  padding-top: 8rem;
+.navigation-bar {
+  background: rgb(0, 97, 153);
+  display: flex;
+  justify-content: space-between;
+  padding: 4px;
 }
 
 .create_board-colors {
@@ -17,4 +20,67 @@
   height: 8rem;
   width: auto;
   cursor: pointer;
+}
+
+.board__header {
+  justify-self: center;
+}
+
+.lists {
+  flex: 1;
+  overflow: auto;
+  white-space: nowrap;
+}
+
+.list__wrapper {
+  width: 272px;
+  margin: 0 4px;
+  height: 100%;
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.styled__list {
+  background-color: #dfe3e6;
+  border-radius: 3px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  position: relative;
+  white-space: normal;
+  padding: 8px;
+}
+
+.add__list {
+  width: 272px;
+  margin: 0 4px;
+  display: inline-block;
+}
+
+.list__title {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.cards__card {
+  cursor: pointer;
+}
+
+.cards__card:hover {
+  background-color: #dbeafe;
+  box-shadow: 5px 5px 5px #d1d5db;
+}
+
+.cards__content {
+  display: flex;
+  align-items: center;
+}
+
+.content-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }

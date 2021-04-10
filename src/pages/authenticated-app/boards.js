@@ -15,14 +15,21 @@ function BoardsPage() {
   })
 
   return (
-    <>
+    <div style={{marginTop: '4rem'}}>
       <Header as="h3">
         <Icon name="user" />
         Personal Boards
       </Header>
 
       <Grid columns={4} doubling stackable>
+        {isBoardsLoading && (
+          <Grid.Column>
+            <h1>Loading...</h1>
+          </Grid.Column>
+        )}
+
         <BoardList list={boards} />
+
         {/* create board button */}
         <Grid.Column>
           <Segment
@@ -44,7 +51,7 @@ function BoardsPage() {
           isLoading={isCreateBoardLoading}
         />
       ) : null}
-    </>
+    </div>
   )
 }
 

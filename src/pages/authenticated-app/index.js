@@ -4,12 +4,19 @@ import {Redirect, Route, Switch} from 'react-router-dom'
 import {Navbar} from 'components/navbar'
 import {BoardsPage} from './boards'
 import {Container} from 'semantic-ui-react'
+import {BoardDataPage} from './board-data'
 
 function AuthenticatedRoutes() {
   return (
     <Switch>
       <Route path="/boards">
-        <BoardsPage />
+        <Container as="main">
+          <BoardsPage />
+        </Container>
+      </Route>
+
+      <Route path="/board/:id">
+        <BoardDataPage />
       </Route>
 
       <Redirect to="/boards" />
@@ -19,12 +26,10 @@ function AuthenticatedRoutes() {
 
 function AuthenticatedApp() {
   return (
-    <>
+    <div style={{height: '100vh', display: 'flex', flexDirection: 'column'}}>
       <Navbar />
-      <Container as="main" className="main__container">
-        <AuthenticatedRoutes />
-      </Container>
-    </>
+      <AuthenticatedRoutes />
+    </div>
   )
 }
 

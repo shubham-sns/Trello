@@ -1,50 +1,31 @@
 import {useAuthContext} from 'context/auth-context'
-import {useMutation, useQuery, useQueryClient} from 'react-query'
+import {useMutation, useQueries, useQuery, useQueryClient} from 'react-query'
+import {useParams} from 'react-router'
 import {mergeDataWithKey} from 'utils'
 import {db} from './firebase'
-import {getUser} from './user'
 
 const boardsRef = db.ref('boards')
 const listsRef = db.ref('lists')
 const cardsRef = db.ref('cards')
 
-/**
- *
- * @param {string} id firebase auth uid
- * @param {string} username
- * @param {string} email
- * @returns
- */
-const createUser = (id, username, email) =>
-  db.ref(`users/${id}`).set({
-    username,
-    email,
-  })
+function useCreateStoreUser() {
+  return useMutation(({uid, email, username}) =>
+    db.ref(`users/${uid}`).set({
+      username,
+      email,
+    }),
+  )
+}
 
 const onceGetUsers = () => db.ref('users').once('value')
-
-/**
- * create a new board in db
- * @param {object} board {title, key}
- */
-const createBoard = async board => {
-  const uid = getUser().uid
-  // get key for new board
-  const id = boardsRef.push().key
-  await boardsRef.child(uid).child(id).set(board)
-  board.key = id
-
-  return board
-}
 
 function useCreateBoard(mutationConfig = {}) {
   const queryClient = useQueryClient()
   const {uid} = useAuthContext()
-  let id = null
+  const id = boardsRef.push().key
 
   return useMutation(
     async board => {
-      id = await boardsRef.push().key
       return boardsRef.child(uid).child(id).set(board)
     },
     {
@@ -53,43 +34,36 @@ function useCreateBoard(mutationConfig = {}) {
         // snapshot on previous value
         const previousBoardList = queryClient.getQueryData('boards')
         // Optimistically update to the new value
-        queryClient.setQueryData('boards', old => ({...old, id: newBoard}))
+        queryClient.setQueryData('boards', old => ({...old, [id]: newBoard}))
 
-        id = null
         // Return a context object with the snapshotted value
         return {previousBoardList}
       },
       // If the mutation fails, use the context returned from onMutate to roll back
-      onError: (err, newTodo, context) => {
-        queryClient.setQueryData('boards', context.previousTodos)
+      onError: (err, newTodo, {previousBoardList}) => {
+        queryClient.setQueryData('boards', previousBoardList)
       },
       ...mutationConfig,
     },
   )
 }
 
-/**
- * Delete board with key from db
- * @param {string} boardKey
- */
-const deleteBoard = async boardKey => {
-  const uid = getUser().uid
-  await boardsRef.child(uid).child(boardKey).remove()
+function useDeleteBoard() {
+  const {uid} = useAuthContext()
+  return useMutation(boardKey => boardsRef.child(uid).child(boardKey).remove())
 }
 
-/**
- * Update board title or color
- * @param {string} boardKey unique board key
- * @param {string} title updated title | color
- */
-const updateBoard = async (boardKey, title) => {
-  const uid = getUser().uid
-  await boardsRef
-    .child(uid)
-    .child(boardKey)
-    .update({
-      ...title,
-    })
+function useUpdateBoardField() {
+  const {uid} = useAuthContext()
+
+  return useMutation(({boardKey, ...data}) =>
+    boardsRef
+      .child(uid)
+      .child(boardKey)
+      .update({
+        ...data,
+      }),
+  )
 }
 
 function useGetBoardsOnce() {
@@ -106,11 +80,162 @@ function useGetBoardsOnce() {
   })
 }
 
+// get board data and lists with boardId
+function useBoardData(key) {
+  const {uid} = useAuthContext()
+
+  return useQueries([
+    {
+      queryKey: ['board', key],
+      queryFn: () => {
+        return boardsRef
+          .child(uid)
+          .child(`${key}`)
+          .once('value')
+          .then(data => data.val())
+      },
+    },
+    {
+      queryKey: ['lists', key],
+      queryFn: () => {
+        return listsRef
+          .child(key)
+          .once('value')
+          .then(data => data.val())
+      },
+      select: data => mergeDataWithKey(data),
+    },
+  ])
+}
+
+function useCreateList(mutationConfig) {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    async ({boardKey, ...list}) => {
+      const id = listsRef.push().key
+      return listsRef.child(boardKey).child(id).set(list)
+    },
+    {
+      onMutate: ({boardKey, ...list}) => {
+        queryClient.invalidateQueries(['lists', boardKey])
+      },
+      ...mutationConfig,
+    },
+  )
+}
+
+function useHandleCreateCard(mutationConfig = {}) {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    ({listKey, ...cardData}) => db.ref(`cards/${listKey}`).push({...cardData}),
+    {
+      // optimistic fake update, for better ux
+      onMutate: ({listKey, ...data}) => {
+        const previousBoardList = queryClient.getQueryData(['cards', listKey])
+
+        queryClient.setQueryData(['cards', listKey], old => ({
+          ...old,
+          //  for user we would show instantly with temp key of string id,
+          id: data,
+        }))
+
+        return {previousBoardList}
+      },
+      onError: (_, {listKey}, {previousBoardList}) => {
+        queryClient.setQueryData(['cards', listKey], previousBoardList)
+      },
+      onSuccess: (successData, {listKey}) => {
+        //* on success we replace the 'id' key with real key, better ux and no need to recall the api also
+        queryClient.setQueryData(['cards', listKey], ({id, ...old}) => ({
+          ...old,
+          [successData.key]: {...id},
+        }))
+        // queryClient.invalidateQueries(['cards'], listKey)
+      },
+    },
+  )
+}
+
+function useGetCardOnce(listKey, queryConfig = {}) {
+  return useQuery({
+    queryKey: ['cards', listKey],
+    queryFn: () =>
+      db
+        .ref(`cards/${listKey}`)
+        .once('value')
+        .then(data => data.val()),
+    select: data => mergeDataWithKey(data),
+    ...queryConfig,
+  })
+}
+
+function useDeleteCard() {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    ({listKey, cardKey}) =>
+      db.ref(`cards/${listKey}/`).child(`${cardKey}`).remove(),
+    {
+      onMutate: ({listKey, cardKey}) => {
+        const oldData = queryClient.getQueryData(['cards', listKey])
+
+        queryClient.setQueryData(['cards', listKey], data => {
+          const tempData = {...data}
+          delete tempData[cardKey]
+          return tempData
+        })
+
+        return {oldData}
+      },
+      onError: (_, {listKey}, {oldData}) =>
+        queryClient.setQueryData(['cards', listKey], oldData),
+    },
+  )
+}
+
+function useDeleteList() {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    ({boardKey, listKey}) =>
+      db
+        .ref(`lists/${boardKey}`)
+        .child(`${listKey}`)
+        .remove()
+        .then(() => db.ref('cards/').child(`${listKey}`).remove()),
+    {
+      onMutate: ({listKey, boardKey}) => {
+        const oldList = queryClient.getQueryData(['lists', boardKey])
+
+        queryClient.setQueryData(['lists', boardKey], old => {
+          const tempData = {...old}
+          console.log(tempData, old, listKey)
+          delete tempData[listKey]
+          return tempData
+        })
+
+        return {oldList}
+      },
+      onError(_, {boardKey}, {oldList}) {
+        queryClient.setQueryData(['lists', boardKey], oldList)
+      },
+    },
+  )
+}
+
 export {
-  createUser,
   onceGetUsers,
-  deleteBoard,
-  updateBoard,
+  useCreateStoreUser,
+  useUpdateBoardField,
   useGetBoardsOnce,
   useCreateBoard,
+  useDeleteBoard,
+  useBoardData,
+  useCreateList,
+  useGetCardOnce,
+  useHandleCreateCard,
+  useDeleteCard,
+  useDeleteList,
 }
