@@ -1,6 +1,5 @@
 import {useAuthContext} from 'context/auth-context'
 import {useMutation, useQueries, useQuery, useQueryClient} from 'react-query'
-import {useParams} from 'react-router'
 import {mergeDataWithKey} from 'utils'
 import {db} from './firebase'
 
@@ -48,21 +47,60 @@ function useCreateBoard(mutationConfig = {}) {
   )
 }
 
-function useDeleteBoard() {
+function useDeleteBoard(mutationConfig = {}) {
   const {uid} = useAuthContext()
-  return useMutation(boardKey => boardsRef.child(uid).child(boardKey).remove())
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    boardKey => boardsRef.child(uid).child(boardKey).remove(),
+    {
+      onMutate: boardKey => {
+        const oldBoards = queryClient.getQueryData('boards')
+
+        queryClient.setQueryData('boards', currentData => {
+          const tempData = {...currentData}
+          delete tempData[boardKey]
+          return tempData
+        })
+
+        return {oldBoards}
+      },
+
+      onError: (_, __, {oldBoards}) =>
+        queryClient.setQueryData('boards', oldBoards),
+      ...mutationConfig,
+    },
+  )
 }
 
-function useUpdateBoardField() {
+function useUpdateBoardField(mutationConfig = {}) {
   const {uid} = useAuthContext()
+  const queryClient = useQueryClient()
 
-  return useMutation(({boardKey, ...data}) =>
-    boardsRef
-      .child(uid)
-      .child(boardKey)
-      .update({
-        ...data,
-      }),
+  return useMutation(
+    ({boardKey, ...data}) =>
+      boardsRef
+        .child(uid)
+        .child(boardKey)
+        .update({
+          ...data,
+        }),
+    {
+      onMutate: ({boardKey, ...data}) => {
+        const oldData = queryClient.getQueryData('boards')
+
+        queryClient.setQueryData('boards', currentData => ({
+          ...currentData,
+          [boardKey]: {...data},
+        }))
+
+        return {oldData}
+      },
+      onError: (_, __, {oldData}) => {
+        queryClient.setQueryData('boards', oldData)
+      },
+      ...mutationConfig,
+    },
   )
 }
 
@@ -211,7 +249,6 @@ function useDeleteList() {
 
         queryClient.setQueryData(['lists', boardKey], old => {
           const tempData = {...old}
-          console.log(tempData, old, listKey)
           delete tempData[listKey]
           return tempData
         })
@@ -220,6 +257,35 @@ function useDeleteList() {
       },
       onError(_, {boardKey}, {oldList}) {
         queryClient.setQueryData(['lists', boardKey], oldList)
+      },
+    },
+  )
+}
+
+function useUpdateList() {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    ({boardKey, listKey, ...list}) =>
+      listsRef
+        .child(boardKey)
+        .child(listKey)
+        .update({
+          ...list,
+        }),
+    {
+      onMutate: ({boardKey, listKey, ...list}) => {
+        const oldData = queryClient.getQueryData(['lists', boardKey])
+
+        queryClient.setQueryData(['lists', boardKey], old => ({
+          ...old,
+          [listKey]: {...list},
+        }))
+
+        return {oldData}
+      },
+      onError: (_, {boardKey}, {oldData}) => {
+        queryClient.setQueryData(['lists', boardKey], oldData)
       },
     },
   )
@@ -238,4 +304,5 @@ export {
   useHandleCreateCard,
   useDeleteCard,
   useDeleteList,
+  useUpdateList,
 }

@@ -1,16 +1,36 @@
+import {useState} from 'react'
 import {Grid, Header, Icon, Segment} from 'semantic-ui-react'
 
 import {useDisclosure} from 'hooks/use-disclosure'
-import {BoardModal} from 'components/boards/board-modal'
-import {useCreateBoard, useGetBoardsOnce} from 'services/firebase/db'
+import {
+  useCreateBoard,
+  useGetBoardsOnce,
+  useUpdateBoardField,
+} from 'services/firebase/db'
+
 import {BoardList} from 'components/boards/board-list'
+import {BoardModal} from 'components/boards/board-modal'
 
 function BoardsPage() {
   const {isOpen, onClose, onOpen} = useDisclosure()
+  const [initialData, setInitialData] = useState(null)
 
   const {isLoading: isBoardsLoading, data: boards} = useGetBoardsOnce()
 
-  const {mutate, isLoading: isCreateBoardLoading} = useCreateBoard({
+  const {
+    mutate: handleUpdateBoard,
+    isLoading: isBoardUpdating,
+  } = useUpdateBoardField({
+    onSuccess: () => {
+      onClose()
+      setInitialData(null)
+    },
+  })
+
+  const {
+    mutate: handleCreateBoard,
+    isLoading: isCreateBoardLoading,
+  } = useCreateBoard({
     onSuccess: onClose,
   })
 
@@ -28,7 +48,7 @@ function BoardsPage() {
           </Grid.Column>
         )}
 
-        <BoardList list={boards} />
+        <BoardList onOpen={onOpen} setEditData={setInitialData} list={boards} />
 
         {/* create board button */}
         <Grid.Column>
@@ -46,9 +66,14 @@ function BoardsPage() {
       {isOpen ? (
         <BoardModal
           open={isOpen}
-          onClose={onClose}
-          onSubmit={mutate}
-          isLoading={isCreateBoardLoading}
+          onClose={() => {
+            onClose()
+            initialData && setInitialData(null)
+          }}
+          onSubmit={initialData ? handleUpdateBoard : handleCreateBoard}
+          initialData={initialData}
+          setInitialData={setInitialData}
+          isLoading={isCreateBoardLoading || isBoardUpdating}
         />
       ) : null}
     </div>

@@ -1,4 +1,4 @@
-import {colors} from 'constants/colors'
+import {useEffect} from 'react'
 import {Controller, useForm} from 'react-hook-form'
 import {
   Button,
@@ -11,13 +11,23 @@ import {
   Segment,
 } from 'semantic-ui-react'
 
-function BoardModal({open, onClose, onSubmit, isLoading}) {
+import {colors} from 'constants/colors'
+
+function BoardModal({
+  open,
+  onClose,
+  onSubmit,
+  isLoading,
+  initialData,
+  setInitialData,
+}) {
   const {
     handleSubmit,
     control,
-    formState: {errors},
+    formState: {errors, isDirty},
     setValue,
     watch,
+    reset,
   } = useForm({
     defaultValues: {
       title: '',
@@ -25,14 +35,34 @@ function BoardModal({open, onClose, onSubmit, isLoading}) {
     },
   })
 
+  useEffect(() => {
+    if (initialData) {
+      const {key, ...data} = initialData
+      reset(data)
+    }
+  }, [initialData, reset])
+
   const watchColor = watch('color')
 
   return (
-    <Modal open={open} onClose={onClose} size="tiny">
-      <ModalHeader>Create Board</ModalHeader>
+    <Modal
+      open={open}
+      onClose={() => {
+        initialData && setInitialData(null)
+        onClose()
+      }}
+      size="tiny"
+    >
+      <ModalHeader>{initialData ? 'Edit' : 'Create'} Board</ModalHeader>
 
       <ModalContent>
-        <Form onSubmit={handleSubmit(onSubmit)}>
+        <Form
+          onSubmit={handleSubmit(data =>
+            initialData
+              ? onSubmit({...data, boardKey: initialData.key})
+              : onSubmit(data),
+          )}
+        >
           <Controller
             control={control}
             name="title"
@@ -74,12 +104,26 @@ function BoardModal({open, onClose, onSubmit, isLoading}) {
       </ModalContent>
 
       <ModalActions>
-        <Button basic onClick={onClose}>
+        <Button
+          basic
+          onClick={() => {
+            onClose()
+            initialData && setInitialData(null)
+          }}
+        >
           Cancel
         </Button>
 
-        <Button primary loading={isLoading} onClick={handleSubmit(onSubmit)}>
-          Create
+        <Button
+          primary
+          loading={isLoading}
+          onClick={handleSubmit(data =>
+            initialData
+              ? onSubmit({...data, boardKey: initialData.key})
+              : onSubmit(data),
+          )}
+        >
+          {initialData ? 'Update' : 'Create'}
         </Button>
       </ModalActions>
     </Modal>

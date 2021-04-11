@@ -1,13 +1,35 @@
+import {useState} from 'react'
+import {Controller, useForm} from 'react-hook-form'
 import {useParams} from 'react-router'
-import {Card, Icon} from 'semantic-ui-react'
-import {useDeleteList} from 'services/firebase/db'
+import {Card, Form, Icon} from 'semantic-ui-react'
+
+import {useDeleteList, useUpdateList} from 'services/firebase/db'
 
 import {AddList} from './add-list'
 import {Cards} from './cards/cards'
 
 function Lists({lists}) {
-  const {mutate} = useDeleteList()
   const {id} = useParams()
+
+  const {mutate: handleDeleteList} = useDeleteList()
+  const {mutate: handleUpdateList} = useUpdateList()
+
+  const {
+    handleSubmit,
+    control,
+    formState: {isDirty},
+    reset,
+  } = useForm({
+    list: '',
+  })
+
+  const [editKey, setEditKey] = useState(null)
+
+  const submitForm = data => {
+    isDirty && handleUpdateList({...data, boardKey: id, listKey: editKey})
+    setEditKey(null)
+    reset()
+  }
 
   return (
     <div className="lists">
@@ -17,10 +39,37 @@ function Lists({lists}) {
             <Card.Content>
               <Card.Header>
                 <div className="content-between">
-                  <span className="list__title">{list}</span>
+                  {editKey === key ? (
+                    <Form onSubmit={handleSubmit(submitForm)}>
+                      <Controller
+                        control={control}
+                        name="list"
+                        defaultValue={list}
+                        render={({field: {ref, onBlur, ...field}}) => (
+                          <Form.Input
+                            autoFocus
+                            placeholder="Add list title"
+                            onBlur={handleSubmit(submitForm)}
+                            {...field}
+                          />
+                        )}
+                      />
+                    </Form>
+                  ) : (
+                    <span
+                      role="button"
+                      onClick={() => setEditKey(key)}
+                      className="list__title"
+                      title={list}
+                    >
+                      {list.length > 20 ? list.slice(0, 20) + '...' : list}
+                    </span>
+                  )}
                   <Icon
                     name="trash alternate"
-                    onClick={() => mutate({boardKey: id, listKey: key})}
+                    onClick={() =>
+                      handleDeleteList({boardKey: id, listKey: key})
+                    }
                     className="cards__card"
                   />
                 </div>

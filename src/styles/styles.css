@@ -20,6 +20,18 @@
   height: 8rem;
   width: auto;
   cursor: pointer;
+  position: relative;
+}
+
+.board__actions {
+  position: absolute;
+  bottom: 5px;
+  right: 3px;
+}
+
+.board__actions > button {
+  /* to override semantic ui styling */
+  background-color: transparent !important;
 }
 
 .board__header {
@@ -30,6 +42,7 @@
   flex: 1;
   overflow: auto;
   white-space: nowrap;
+  height: 90%;
 }
 
 .list__wrapper {
@@ -63,6 +76,7 @@
 .list__title {
   font-weight: 700;
   font-size: 18px;
+  cursor: pointer;
 }
 
 .cards__card {
