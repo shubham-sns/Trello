@@ -1,5 +1,7 @@
-import {useAuthContext} from 'context/auth-context'
 import {useMutation, useQueries, useQuery, useQueryClient} from 'react-query'
+
+import {useAuthContext} from 'context/auth-context'
+
 import {mergeDataWithKey} from 'utils'
 import {db} from './firebase'
 
@@ -30,7 +32,7 @@ function useCreateBoard(mutationConfig = {}) {
     {
       // optimistic updates
       onMutate: newBoard => {
-        // snapshot on previous value
+        // snapshot of previous value
         const previousBoardList = queryClient.getQueryData('boards')
         // Optimistically update to the new value
         queryClient.setQueryData('boards', old => ({...old, [id]: newBoard}))
@@ -291,6 +293,30 @@ function useUpdateList() {
   )
 }
 
+function useEditCard(mutationConfig = {}) {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    ({listKey, cardKey, ...card}) =>
+      cardsRef.child(listKey).child(cardKey).update(card),
+    {
+      onMutate: ({listKey, cardKey, ...card}) => {
+        const oldCard = queryClient.getQueryData(['cards', listKey])
+
+        queryClient.setQueryData(['cards', listKey], cards => ({
+          ...cards,
+          [cardKey]: card,
+        }))
+
+        return {oldCard}
+      },
+      onError: (_, {listKey}, {oldCard}) =>
+        queryClient.setQueryData(['cards', listKey], oldCard),
+      ...mutationConfig,
+    },
+  )
+}
+
 export {
   onceGetUsers,
   useCreateStoreUser,
@@ -305,4 +331,5 @@ export {
   useDeleteCard,
   useDeleteList,
   useUpdateList,
+  useEditCard,
 }

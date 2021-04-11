@@ -24,7 +24,7 @@ function BoardModal({
   const {
     handleSubmit,
     control,
-    formState: {errors, isDirty},
+    formState: {errors},
     setValue,
     watch,
     reset,

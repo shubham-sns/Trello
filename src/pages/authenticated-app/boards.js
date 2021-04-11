@@ -36,7 +36,7 @@ function BoardsPage() {
 
   return (
     <div style={{marginTop: '4rem'}}>
-      <Header as="h3">
+      <Header as="h3" style={{paddingLeft: '14px'}}>
         <Icon name="user" />
         Personal Boards
       </Header>

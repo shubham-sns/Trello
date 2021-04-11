@@ -91,6 +91,12 @@
 .cards__content {
   display: flex;
   align-items: center;
+  position: relative;
+}
+
+.cards__content--actions {
+  position: absolute;
+  right: 0;
 }
 
 .content-between {

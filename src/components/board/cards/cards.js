@@ -1,5 +1,14 @@
+import {useState} from 'react'
 import {Controller, useForm} from 'react-hook-form'
-import {Button, Card, Form, Icon, Placeholder} from 'semantic-ui-react'
+import {
+  Button,
+  Card,
+  Form,
+  Header,
+  Icon,
+  Label,
+  Placeholder,
+} from 'semantic-ui-react'
 
 import {
   useDeleteCard,
@@ -7,7 +16,11 @@ import {
   useHandleCreateCard,
 } from 'services/firebase/db'
 
+import {CardModal} from './card-modal'
+
 function Cards({listKey}) {
+  const [selectedCard, setSelectedCard] = useState(null)
+
   const {control, handleSubmit, reset} = useForm({
     defaultValues: {
       cardTitle: '',
@@ -43,32 +56,65 @@ function Cards({listKey}) {
       </>
     )
 
+  const cardProps = priority => {
+    switch (priority) {
+      case 'high':
+        return {color: 'red'}
+
+      case 'medium':
+        return {color: 'orange'}
+
+      case 'low':
+        return {color: 'green'}
+
+      default:
+        break
+    }
+  }
+
   return (
     <>
       {data?.map(card => (
         <Card color="black" fluid className="cards__card" key={card.key}>
           <Card.Content style={{color: 'black'}}>
-            <div className="card__content">
-              <span style={{fontSize: '15px'}}>
+            <div className="cards__content">
+              {card.priority ? (
+                <Label
+                  size="small"
+                  circular
+                  empty
+                  {...cardProps(card.priority)}
+                  style={{
+                    marginRight: '5px',
+                  }}
+                />
+              ) : null}
+
+              <div style={{fontSize: '18px'}}>
                 {card.cardTitle?.length > 20
                   ? `${card.cardTitle.slice(0, 20)}...`
                   : card.cardTitle}
-              </span>
-              <Button
-                onClick={() => handleDeleteCard({listKey, cardKey: card.key})}
-                floated="right"
-                size="tiny"
-                icon
-                basic
-              >
-                <Icon
-                  name="trash alternate outline"
-                  style={{marginRight: '5px'}}
-                />
-              </Button>
-              <Button floated="right" size="tiny" icon basic>
-                <Icon name="edit outline" />
-              </Button>
+              </div>
+
+              <div className="cards__content--actions">
+                <Button
+                  onClick={() => handleDeleteCard({listKey, cardKey: card.key})}
+                  floated="right"
+                  size="tiny"
+                  icon
+                >
+                  <Icon name="trash alternate outline" />
+                </Button>
+
+                <Button
+                  onClick={() => setSelectedCard(card)}
+                  floated="right"
+                  size="tiny"
+                  icon
+                >
+                  <Icon name="edit outline" />
+                </Button>
+              </div>
             </div>
           </Card.Content>
         </Card>
@@ -93,6 +139,15 @@ function Cards({listKey}) {
           />
         </Form>
       </Card>
+
+      {Boolean(selectedCard) && (
+        <CardModal
+          open={Boolean(selectedCard)}
+          onClose={() => setSelectedCard(null)}
+          cardValues={selectedCard}
+          listKey={listKey}
+        />
+      )}
     </>
   )
 }
