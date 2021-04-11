@@ -1,7 +1,5 @@
 import {Loader, Segment} from 'semantic-ui-react'
 import {useParams} from 'react-router'
-import {DndProvider} from 'react-dnd'
-import {HTML5Backend} from 'react-dnd-html5-backend'
 
 import {BoardHeader} from 'components/board/board-header'
 import {useBoardData} from 'services/firebase/db'
@@ -26,10 +24,6 @@ function BoardDataPage() {
         </Segment>
       </div>
     )
-
-  /* <DndProvider backend={HTML5Backend}>
-        <div></div>
-      </DndProvider> */
 
   return (
     <div style={{flexGrow: 1}}>
