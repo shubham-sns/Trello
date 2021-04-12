@@ -1,5 +1,5 @@
 import {Draggable} from 'react-beautiful-dnd'
-import {Button, Card, Icon, Label, Ref} from 'semantic-ui-react'
+import {Button, Card, Icon, Label, Popup, Ref} from 'semantic-ui-react'
 import {useDeleteCard} from 'services/firebase/db'
 
 const cardProps = priority => {
@@ -31,7 +31,6 @@ function DraggableCard({card, listKey, setSelectedCard, index}) {
             className="cards__card"
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            // style={{}}
           >
             <Card.Content
               style={{
@@ -41,14 +40,21 @@ function DraggableCard({card, listKey, setSelectedCard, index}) {
             >
               <div className="cards__content">
                 {card.priority ? (
-                  <Label
-                    size="small"
-                    circular
-                    empty
-                    {...cardProps(card.priority)}
-                    style={{
-                      marginRight: '5px',
-                    }}
+                  <Popup
+                    position="top center"
+                    content={card.priority}
+                    size="tiny"
+                    trigger={
+                      <Label
+                        size="small"
+                        circular
+                        empty
+                        {...cardProps(card.priority)}
+                        style={{
+                          marginRight: '5px',
+                        }}
+                      />
+                    }
                   />
                 ) : null}
 

@@ -25,7 +25,6 @@ function CardModal({
   })
 
   const submitForm = data => {
-    console.log(data)
     mutate({listKey, cardKey: key, ...data})
   }
 

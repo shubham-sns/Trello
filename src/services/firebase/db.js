@@ -137,13 +137,14 @@ function useBoardData(key) {
     },
     {
       queryKey: ['lists', key],
+      staleTime: Infinity,
       queryFn: () => {
         return listsRef
           .child(key)
           .once('value')
           .then(data => data.val())
+          .then(data => mergeDataWithKey(data))
       },
-      select: data => mergeDataWithKey(data),
     },
   ])
 }
@@ -201,12 +202,13 @@ function useHandleCreateCard(mutationConfig = {}) {
 function useGetCardOnce(listKey, queryConfig = {}) {
   return useQuery({
     queryKey: ['cards', listKey],
+    staleTime: Infinity,
     queryFn: () =>
       db
         .ref(`cards/${listKey}`)
         .once('value')
-        .then(data => data.val()),
-    select: data => mergeDataWithKey(data),
+        .then(data => data.val())
+        .then(data => mergeDataWithKey(data)),
     ...queryConfig,
   })
 }
@@ -222,9 +224,7 @@ function useDeleteCard() {
         const oldData = queryClient.getQueryData(['cards', listKey])
 
         queryClient.setQueryData(['cards', listKey], data => {
-          const tempData = {...data}
-          delete tempData[cardKey]
-          return tempData
+          return data.filter(card => card.key !== cardKey)
         })
 
         return {oldData}
@@ -249,11 +249,9 @@ function useDeleteList() {
       onMutate: ({listKey, boardKey}) => {
         const oldList = queryClient.getQueryData(['lists', boardKey])
 
-        queryClient.setQueryData(['lists', boardKey], old => {
-          const tempData = {...old}
-          delete tempData[listKey]
-          return tempData
-        })
+        queryClient.setQueryData(['lists', boardKey], old =>
+          old.filter(list => list.key !== listKey),
+        )
 
         return {oldList}
       },
@@ -276,13 +274,14 @@ function useUpdateList() {
           ...list,
         }),
     {
-      onMutate: ({boardKey, listKey, ...list}) => {
+      onMutate: ({boardKey, listKey, ...newListData}) => {
         const oldData = queryClient.getQueryData(['lists', boardKey])
 
-        queryClient.setQueryData(['lists', boardKey], old => ({
-          ...old,
-          [listKey]: {...list},
-        }))
+        queryClient.setQueryData(['lists', boardKey], old =>
+          old.map(list =>
+            list.key === listKey ? {...list, ...newListData} : list,
+          ),
+        )
 
         return {oldData}
       },
@@ -300,13 +299,14 @@ function useEditCard(mutationConfig = {}) {
     ({listKey, cardKey, ...card}) =>
       cardsRef.child(listKey).child(cardKey).update(card),
     {
-      onMutate: ({listKey, cardKey, ...card}) => {
+      onMutate: ({listKey, cardKey, ...updatedCardData}) => {
         const oldCard = queryClient.getQueryData(['cards', listKey])
 
-        queryClient.setQueryData(['cards', listKey], cards => ({
-          ...cards,
-          [cardKey]: card,
-        }))
+        queryClient.setQueryData(['cards', listKey], cards => {
+          return cards.map(card =>
+            card.key === cardKey ? {...card, ...updatedCardData} : card,
+          )
+        })
 
         return {oldCard}
       },

@@ -1,8 +1,9 @@
-import {useEffect, useRef, useState} from 'react'
+import {useState} from 'react'
 import {Controller, useForm} from 'react-hook-form'
 import {useParams} from 'react-router'
 import {Card, Form, Icon, Input} from 'semantic-ui-react'
 import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd'
+import {useQueryClient} from 'react-query'
 
 import {useDeleteList, useUpdateList} from 'services/firebase/db'
 
@@ -11,6 +12,8 @@ import {Cards} from './cards/cards'
 
 function Lists({lists}) {
   const {id} = useParams()
+
+  const queryClient = useQueryClient()
 
   const {mutate: handleDeleteList} = useDeleteList()
   const {mutate: handleUpdateList} = useUpdateList()
@@ -27,7 +30,6 @@ function Lists({lists}) {
   const [editKey, setEditKey] = useState(null)
 
   const submitForm = data => {
-    console.log('form submitted')
     isDirty && handleUpdateList({...data, boardKey: id, listKey: editKey})
     setEditKey(null)
     reset()
@@ -49,12 +51,42 @@ function Lists({lists}) {
       return
     }
 
+    //  handle lists / (columns)
     if (type === 'column') {
-      // handle columns
-      console.log({
-        result,
-      })
+      const tempList = [...lists]
+      const removed = tempList.splice(source.index, 1)
+      tempList.splice(destination.index, 0, ...removed)
+
+      return queryClient.setQueryData(['lists', id], [...tempList])
     }
+
+    // * everything from this point is for cards/tasks
+
+    // in which list/column card is dropped
+    const start = source.droppableId
+    const finish = destination.droppableId
+
+    // dropped in same column
+    if (start === finish) {
+      const tempCards = queryClient.getQueryData(['cards', start])
+      const removed = tempCards.splice(source.index, 1)
+      tempCards.splice(destination.index, 0, ...removed)
+
+      return queryClient.setQueryData(['cards', start], [...tempCards])
+    }
+
+    // dropped in different column
+
+    // mutate start list
+    const startCards = queryClient.getQueryData(['cards', start])
+    const removedCard = startCards.splice(source.index, 1)
+
+    // mutate destination list
+    const finishCards = queryClient.getQueryData(['cards', finish])
+    finishCards.splice(destination.index, 0, ...removedCard)
+
+    queryClient.setQueryData(['cards', start], [...startCards])
+    queryClient.setQueryData(['cards', finish], [...finishCards])
   }
 
   return (
@@ -68,14 +100,18 @@ function Lists({lists}) {
           >
             {lists?.map(({key, list}, index) => (
               <Draggable key={key} draggableId={key} index={index}>
-                {provided => (
+                {(provided, {isDragging}) => (
                   <div
                     className="list__wrapper"
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                   >
-                    <Card style={{background: 'rgb(223, 227, 230)'}}>
+                    <Card
+                      style={{
+                        background: 'rgb(223, 227, 230)',
+                      }}
+                    >
                       <Card.Content>
                         <Card.Header>
                           <div className="content-between">
