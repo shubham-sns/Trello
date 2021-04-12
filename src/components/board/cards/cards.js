@@ -23,7 +23,7 @@ function Cards({listKey}) {
 
   const submitForm = ({cardTitle}) => {
     if (cardTitle.trim()) {
-      handleCreateCard({listKey, cardTitle, createdAt: Date.now()})
+      handleCreateCard({listKey, cardTitle})
       reset()
     }
   }

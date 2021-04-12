@@ -170,29 +170,28 @@ function useHandleCreateCard(mutationConfig = {}) {
   const queryClient = useQueryClient()
 
   return useMutation(
-    ({listKey, ...cardData}) => db.ref(`cards/${listKey}`).push({...cardData}),
+    ({listKey, cardTitle}) => db.ref(`cards/${listKey}`).push({cardTitle}),
     {
       // optimistic fake update, for better ux
-      onMutate: ({listKey, ...data}) => {
+      onMutate: ({listKey, cardTitle}) => {
         const previousBoardList = queryClient.getQueryData(['cards', listKey])
 
-        queryClient.setQueryData(['cards', listKey], old => ({
-          ...old,
-          //  for user we would show instantly with temp key of string id,
-          id: data,
-        }))
+        queryClient.setQueryData(['cards', listKey], old => {
+          return [...old, {key: 'temp', cardTitle}]
+        })
 
         return {previousBoardList}
       },
       onError: (_, {listKey}, {previousBoardList}) => {
         queryClient.setQueryData(['cards', listKey], previousBoardList)
       },
-      onSuccess: (successData, {listKey}) => {
+      onSuccess: (successData, {listKey, cardTitle}) => {
         //* on success we replace the 'id' key with real key, better ux and no need to recall the api also
-        queryClient.setQueryData(['cards', listKey], ({id, ...old}) => ({
-          ...old,
-          [successData.key]: {...id},
-        }))
+        queryClient.setQueryData(['cards', listKey], old => {
+          const temp = [...old]
+          temp[temp.length - 1] = {key: successData.key, cardTitle}
+          return temp
+        })
         // queryClient.invalidateQueries(['cards'], listKey)
       },
     },
