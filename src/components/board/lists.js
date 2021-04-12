@@ -36,7 +36,7 @@ function Lists({lists}) {
   }
 
   const handleOnDragEnd = result => {
-    const {destination, source, draggableId, type} = result
+    const {destination, source, type} = result
 
     //If there is no destination
     if (!destination) {

@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import React from 'react'
 import {Controller, useForm} from 'react-hook-form'
 import {useMutation} from 'react-query'

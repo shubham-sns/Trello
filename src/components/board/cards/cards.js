@@ -3,11 +3,7 @@ import {Droppable} from 'react-beautiful-dnd'
 import {Controller, useForm} from 'react-hook-form'
 import {Card, Form, Placeholder} from 'semantic-ui-react'
 
-import {
-  useDeleteCard,
-  useGetCardOnce,
-  useHandleCreateCard,
-} from 'services/firebase/db'
+import {useGetCardOnce, useHandleCreateCard} from 'services/firebase/db'
 
 import {CardModal} from './card-modal'
 import {DraggableCard} from './draggable-card'

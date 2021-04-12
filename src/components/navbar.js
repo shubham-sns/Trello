@@ -1,5 +1,5 @@
 import {useDisclosure} from 'hooks/use-disclosure'
-import {Link, useHistory} from 'react-router-dom'
+import {Link} from 'react-router-dom'
 import {
   Button,
   Modal,
