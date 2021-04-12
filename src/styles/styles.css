@@ -79,6 +79,10 @@
   cursor: pointer;
 }
 
+.cards__wrapper {
+  margin-top: 1rem;
+}
+
 .cards__card {
   cursor: pointer;
 }

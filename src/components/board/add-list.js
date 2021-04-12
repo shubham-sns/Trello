@@ -16,12 +16,18 @@ function AddList() {
   }
 
   return (
-    <div className="add__list">
-      <Form onSubmit={handleSubmit(submitForm)}>
-        <Form.Field>
-          <input placeholder="Create New List" {...register('list')} />
-        </Form.Field>
-      </Form>
+    <div className="list__wrapper">
+      <div className="add__list">
+        <Form onSubmit={handleSubmit(submitForm)}>
+          <Form.Field>
+            <input
+              autoComplete="off"
+              placeholder="Create New List"
+              {...register('list')}
+            />
+          </Form.Field>
+        </Form>
+      </div>
     </div>
   )
 }

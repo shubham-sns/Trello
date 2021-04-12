@@ -1,14 +1,7 @@
 import {useState} from 'react'
+import {Droppable} from 'react-beautiful-dnd'
 import {Controller, useForm} from 'react-hook-form'
-import {
-  Button,
-  Card,
-  Form,
-  Header,
-  Icon,
-  Label,
-  Placeholder,
-} from 'semantic-ui-react'
+import {Card, Form, Placeholder} from 'semantic-ui-react'
 
 import {
   useDeleteCard,
@@ -17,6 +10,7 @@ import {
 } from 'services/firebase/db'
 
 import {CardModal} from './card-modal'
+import {DraggableCard} from './draggable-card'
 
 function Cards({listKey}) {
   const [selectedCard, setSelectedCard] = useState(null)
@@ -30,7 +24,6 @@ function Cards({listKey}) {
   const {data, isLoading} = useGetCardOnce(listKey)
 
   const {mutate: handleCreateCard} = useHandleCreateCard()
-  const {mutate: handleDeleteCard} = useDeleteCard()
 
   const submitForm = ({cardTitle}) => {
     if (cardTitle.trim()) {
@@ -56,69 +49,29 @@ function Cards({listKey}) {
       </>
     )
 
-  const cardProps = priority => {
-    switch (priority) {
-      case 'high':
-        return {color: 'red'}
-
-      case 'medium':
-        return {color: 'orange'}
-
-      case 'low':
-        return {color: 'green'}
-
-      default:
-        break
-    }
-  }
-
   return (
     <>
-      {data?.map(card => (
-        <Card color="black" fluid className="cards__card" key={card.key}>
-          <Card.Content style={{color: 'black'}}>
-            <div className="cards__content">
-              {card.priority ? (
-                <Label
-                  size="small"
-                  circular
-                  empty
-                  {...cardProps(card.priority)}
-                  style={{
-                    marginRight: '5px',
-                  }}
-                />
-              ) : null}
-
-              <div style={{fontSize: '18px'}}>
-                {card.cardTitle?.length > 20
-                  ? `${card.cardTitle.slice(0, 20)}...`
-                  : card.cardTitle}
-              </div>
-
-              <div className="cards__content--actions">
-                <Button
-                  onClick={() => handleDeleteCard({listKey, cardKey: card.key})}
-                  floated="right"
-                  size="tiny"
-                  icon
-                >
-                  <Icon name="trash alternate outline" />
-                </Button>
-
-                <Button
-                  onClick={() => setSelectedCard(card)}
-                  floated="right"
-                  size="tiny"
-                  icon
-                >
-                  <Icon name="edit outline" />
-                </Button>
-              </div>
-            </div>
-          </Card.Content>
-        </Card>
-      ))}
+      <Droppable droppableId={listKey} type="task">
+        {(provided, snapshot) => (
+          <div
+            className="cards__wrapper"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            style={{background: snapshot.isDraggingOver && '#d5f3ff'}}
+          >
+            {data?.map((card, index) => (
+              <DraggableCard
+                key={card.key}
+                listKey={listKey}
+                card={card}
+                setSelectedCard={setSelectedCard}
+                index={index}
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
 
       {/* create new card form */}
       <Card>
@@ -128,18 +81,21 @@ function Cards({listKey}) {
             name="cardTitle"
             render={({field: {onBlur, ref, ...field}}) => {
               return (
-                <Form.Input
-                  fluid
-                  placeholder="Create card"
-                  onBlur={handleSubmit(submitForm)}
-                  {...field}
-                />
+                <Form.Field>
+                  <input
+                    autoComplete="off"
+                    placeholder="Create card"
+                    onBlur={handleSubmit(submitForm)}
+                    {...field}
+                  />
+                </Form.Field>
               )
             }}
           />
         </Form>
       </Card>
 
+      {/* modals */}
       {Boolean(selectedCard) && (
         <CardModal
           open={Boolean(selectedCard)}
