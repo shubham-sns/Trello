@@ -1,7 +1,7 @@
 ## Introduction
 Trello clone. Helps you to manage your tasks by creating boards and tasks. created to learn more firebase-realtime-database and semantic-ui-react and react-beautiful-dnd.
 
-Demo live at: [https://mrugjal.vercel.app/](https://hashblog.vercel.app/)
+Demo live at: [trello-shubham-sns.vercel.app](https://trello-shubham-sns.vercel.app/)
 
 ## Features
 
